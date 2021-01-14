@@ -1,0 +1,11 @@
+[default]
+cache_dir = c:\work\DeltaTradingMT4\DeltaTradingMT4\cache
+screen_shot_dir = c:\work\DeltaTradingMT4\DeltaTradingMT4\screen_shots
+
+mongodb_user = mongo_user
+mongodb_pass = mongo_password
+
+rabbitmq_user = rabbitmq_user
+rabbitmq_pass = rabbitmq_password
+
+
