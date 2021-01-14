@@ -1,11 +1,11 @@
 [default]
-cache_dir = c:\work\DeltaTradingMT4\DeltaTradingMT4\cache
-screen_shot_dir = c:\work\DeltaTradingMT4\DeltaTradingMT4\screen_shots
+log_file_dir = c:\work\sw-delta-ai-cycles\application-instance\logs
+cache_dir = c:\work\sw-delta-ai-cycles\application-instance\cache
 
-mongodb_user = mongo_user
-mongodb_pass = mongo_password
+[mongodb]
+username = joe_fred
+password = password12334
 
-rabbitmq_user = rabbitmq_user
-rabbitmq_pass = rabbitmq_password
-
-
+[rabbitmq]
+username = bugs_bunny
+password = password1234
