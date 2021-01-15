@@ -1,2 +1,1 @@
-import logger
-
+import cycle_machine.logger

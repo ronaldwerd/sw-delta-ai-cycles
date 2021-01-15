@@ -20,6 +20,7 @@ config.read(_config_path)
 
 CACHE_DIR = config['default']['cache_dir']
 LOG_DIR = config['default']['log_dir']
+SOLUTION_DIR = config['default']['solution_dir']
 
 
 if not os.path.exists(CACHE_DIR):
