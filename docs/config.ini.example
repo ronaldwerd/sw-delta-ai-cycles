@@ -1,10 +1,12 @@
 [default]
-log_file_dir = c:\work\sw-delta-ai-cycles\application-instance\logs
+log_dir = c:\work\sw-delta-ai-cycles\application-instance\logs
 cache_dir = c:\work\sw-delta-ai-cycles\application-instance\cache
+solution_dir = c:\work\sw-delta-ai-cycles\application-instance\solutions
 
 [mongodb]
-username = joe_fred
-password = password12334
+hostname = localhost
+port     = 27017
+dbname   = delta-ai
 
 [rabbitmq]
 username = bugs_bunny

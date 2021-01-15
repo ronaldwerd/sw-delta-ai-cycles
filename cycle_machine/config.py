@@ -22,6 +22,15 @@ CACHE_DIR = config['default']['cache_dir']
 LOG_DIR = config['default']['log_dir']
 SOLUTION_DIR = config['default']['solution_dir']
 
+MONGO_DB_HOSTNAME = None
+MONGO_DB_DBNAME = None
+MONGO_DB_PORT = None
+
+if 'mongodb' in config:
+    MONGO_DB_HOSTNAME = config['mongodb']['hostname']
+    MONGO_DB_PORT = int(config['mongodb']['port'])
+    MONGO_DB_DBNAME = config['mongodb']['dbname']
+
 
 if not os.path.exists(CACHE_DIR):
     os.path.makedirs(CACHE_DIR)

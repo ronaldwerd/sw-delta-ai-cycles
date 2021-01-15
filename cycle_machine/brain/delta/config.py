@@ -30,7 +30,8 @@ class DeltaSolutionConfig:
         return available
 
     def __init__(self, symbol: str):
-        self._symbol = symbol
+        self.data_source = None
+        self.symbol = symbol
         self._periods = {}
 
         self.__md5_check_sum = None
@@ -38,7 +39,7 @@ class DeltaSolutionConfig:
         self.refresh()
 
     def refresh(self):
-        json_config = os.path.join(config.SOLUTION_DIR, self._symbol + '.json')
+        json_config = os.path.join(config.SOLUTION_DIR, self.symbol + '.json')
 
         with open(json_config) as file:
             file_contents = file.read()
@@ -53,6 +54,9 @@ class DeltaSolutionConfig:
             self.__md5_check_sum = md5_digest
 
             json_dict = json.loads(file_contents)
+
+            self.data_source = json_dict['data_source']
+
             periods_ascending = sorted(json_dict['periods'], key=lambda k: k['period'], reverse=True)
             data_source = json_dict['data_source']
 
@@ -61,7 +65,7 @@ class DeltaSolutionConfig:
                     if 'enabled' in p and p['enabled'] is False:
                         continue
 
-                    dpc = DeltaPeriodCalculationConfig(self._symbol,
+                    dpc = DeltaPeriodCalculationConfig(self.symbol,
                                                        p['period'],
                                                        p['bars_in_distribution'],
                                                        p['distributions'],
