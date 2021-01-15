@@ -16,6 +16,12 @@ periods = delta_solution_config.periods_asc()
 print("Computing cycles for: " + args.compute_symbol)
 
 for p in periods:
+    print("Loading period %d" % p, end=" ")
     calculator_config = delta_solution_config.delta_period_calculation_config(p)
     bar_sequence = repository.load_series(p)
+    cycles_computed = 0
+
+    print("and determining delta points for %d with %d cycle(s)" % (p, cycles_computed), end=" ")
+
+    print("and calculating range lines.")
     pass
