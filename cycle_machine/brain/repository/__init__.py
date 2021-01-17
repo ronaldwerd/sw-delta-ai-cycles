@@ -24,6 +24,9 @@ class Repository:
     def save_solution_run(self, period: int, delta_solution_run: DeltaSolutionRun) -> int:
         pass
 
+    def load_solution_run(self, period):
+        pass
+
 
 class CacheFileRepository(Repository, ABC):
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
@@ -61,6 +64,10 @@ class MongoDbRepository(Repository, ABC):
     def save_solution_run(self, period: int, delta_solution_run_json_friendly: dict):
         collection_name = 'solution.result.' + self.delta_solution_config.symbol + "." + str(period)
         self.mongo_db[collection_name].insert_one(delta_solution_run_json_friendly)
+
+    def load_solution_run(self, period: int):
+        collection_name = 'solution.result.' + self.delta_solution_config.symbol + "." + str(period)
+        return self.mongo_db[collection_name].find_one()
 
 
 def get_repository(delta_solution_config: DeltaSolutionConfig) -> Repository:

@@ -6,6 +6,8 @@ from flask import Flask
 from flask_cors import CORS
 
 from cycle_machine.brain.delta import DeltaSolutionConfig
+from cycle_machine.brain.repository import get_repository
+from cycle_machine.brain.repository.mapper.delta_solution_run import mongo_friendly_deserialize
 from cycle_machine.logger import logger
 
 _service_name = "cycle_machine"
@@ -38,27 +40,38 @@ def time_frames_for_symbol(symbol):
 # TODO: TAKE NOTE!
 
 
-@_app.route('/solution/<string:symbol>/<int:period>')
-def solution_series_for_symbol(symbol, period: int, bar_count=0):
-    solution_config = DeltaSolutionConfig(symbol)
-    delta_period_calculator_config = solution_config.delta_period_calculation_config(period)
+@_app.route('/series/<string:symbol>/<int:period>')
+def solution_series_for_symbol(symbol, period: int):
+    delta_solution_config = DeltaSolutionConfig(symbol)
+    delta_period_calculator_config = delta_solution_config.delta_period_calculation_config(period)
+
+    repository = get_repository(delta_solution_config)
+    bars = repository.load_series(period)
+
+    truncate_index = [e for e, b in enumerate(bars) if b.date_time == delta_period_calculator_config.start_date][0]
 
     payload = {
         'cycle_meta_data': {
             'symbol': delta_period_calculator_config.symbol,
             'period': delta_period_calculator_config.period,
             'start_time': delta_period_calculator_config.start_date.timestamp(),
-            'truncate_index': 0,  # TODO: GET THIS!
+            'truncate_index': truncate_index,
             'point_count': delta_period_calculator_config.delta_point_count,
             'distributions': delta_period_calculator_config.number_of_distributions,
-            'bars_in_cycle': 0,  # TODO: GET THIS!
-            'cycle_numbers': [],  # TODO: GET THIS!
-            'recursive_runs': 0,  # TODO: GET THIS!
+            'bars_in_cycle': delta_period_calculator_config.bars_per_cycle,
+            # 'cycle_numbers': [],  # TODO: GET THIS!
         },
-        'bars': []
+        'bars': bars
     }
 
     return json.dumps(payload, cls=RestDefaultJsonEncoder)
+
+
+@_app.route('/solution-run/<string:symbol>/<int:period>')
+def default_solution_run(symbol, period: int):
+    delta_solution_config = DeltaSolutionConfig(symbol)
+    repository = get_repository(delta_solution_config)
+    return mongo_friendly_deserialize(repository.load_solution_run(period))
 
 
 def instantiate_service():

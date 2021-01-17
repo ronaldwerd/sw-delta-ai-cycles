@@ -16,6 +16,6 @@ def mongo_friendly_serialize(dsr: DeltaSolutionRun) -> dict:
     return my_dict
 
 
-def mongo_friendly_deserialize():
-    """Stubbed for the future when we need to load records back in from the database."""
-    pass
+def mongo_friendly_deserialize(solution_run_obj):
+    solution_run_obj.pop('_id', None)
+    return solution_run_obj
