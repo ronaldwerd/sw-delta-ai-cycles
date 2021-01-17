@@ -14,7 +14,7 @@ class DeltaSolution:
 
     def refresh_configuration(self):
         if self.config.refresh():
-            for p in self.config.periods:
+            for p in self.config.periods_asc():
                 self.period_configurations[p] = self.config.delta_period_calculation_config(p)
             return True
         return False

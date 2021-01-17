@@ -30,6 +30,6 @@ def calculate_range_lines(delta_cycles: DeltaCycles):
         mean = np.mean(points)
         range_start = math.floor(mean - std)
         range_end = math.floor(mean + std)
-        ranges[c] = (range_start, range_end)
+        ranges[c] = [range_start, range_end]
 
     return ranges

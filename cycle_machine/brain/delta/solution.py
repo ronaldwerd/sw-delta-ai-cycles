@@ -1,8 +1,6 @@
-import os
-import pickle
+import copy
 
 import numpy as np
-import copy
 
 from cycle_machine.brain.delta.ai.points import PointsCalculator
 from cycle_machine.brain.delta.ai.ranges import calculate_range_lines

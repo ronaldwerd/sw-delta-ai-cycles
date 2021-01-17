@@ -5,6 +5,7 @@ from json import JSONEncoder
 from flask import Flask
 from flask_cors import CORS
 
+from cycle_machine.brain.delta import DeltaSolutionConfig
 from cycle_machine.logger import logger
 
 _service_name = "cycle_machine"
@@ -25,6 +26,39 @@ class RestDefaultJsonEncoder(JSONEncoder):
 @_app.route('/')
 def hello():
     return json.dumps({"service": "cycle_machine"})
+
+
+@_app.route("/periods/<string:symbol>")
+def time_frames_for_symbol(symbol):
+    solution_config = DeltaSolutionConfig(symbol)
+    return json.dumps(solution_config.periods_asc())
+
+
+"""Instead of a last bar count we will do a last cycle count since it takes a minimum of one cycle to display """
+# TODO: TAKE NOTE!
+
+
+@_app.route('/solution/<string:symbol>/<int:period>')
+def solution_series_for_symbol(symbol, period: int, bar_count=0):
+    solution_config = DeltaSolutionConfig(symbol)
+    delta_period_calculator_config = solution_config.delta_period_calculation_config(period)
+
+    payload = {
+        'cycle_meta_data': {
+            'symbol': delta_period_calculator_config.symbol,
+            'period': delta_period_calculator_config.period,
+            'start_time': delta_period_calculator_config.start_date.timestamp(),
+            'truncate_index': 0,  # TODO: GET THIS!
+            'point_count': delta_period_calculator_config.delta_point_count,
+            'distributions': delta_period_calculator_config.number_of_distributions,
+            'bars_in_cycle': 0,  # TODO: GET THIS!
+            'cycle_numbers': [],  # TODO: GET THIS!
+            'recursive_runs': 0,  # TODO: GET THIS!
+        },
+        'bars': []
+    }
+
+    return json.dumps(payload, cls=RestDefaultJsonEncoder)
 
 
 def instantiate_service():

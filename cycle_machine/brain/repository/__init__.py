@@ -4,6 +4,7 @@ from abc import ABC
 from pymongo import MongoClient
 
 from cycle_machine.brain.delta.config import DeltaSolutionConfig
+from cycle_machine.brain.delta.solution import DeltaSolutionRun
 from cycle_machine.brain.series import Bar
 from cycle_machine.config import MONGO_DB_HOSTNAME, MONGO_DB_PORT, MONGO_DB_DBNAME
 
@@ -19,6 +20,10 @@ class Repository:
         """Load a series from a data source. such as a file, bytestream or database"""
         pass
 
+    @abc.abstractmethod
+    def save_solution_run(self, period: int, delta_solution_run: DeltaSolutionRun) -> int:
+        pass
+
 
 class CacheFileRepository(Repository, ABC):
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
@@ -26,6 +31,10 @@ class CacheFileRepository(Repository, ABC):
 
     def load_series(self, period: int) -> []:
         print("Loading cache file...")
+
+    def save_solution_run(self, period: int, delta_solution_run: DeltaSolutionRun):
+        print("Saving solution runs...")
+        pass
 
 
 class MongoDbRepository(Repository, ABC):
@@ -48,6 +57,10 @@ class MongoDbRepository(Repository, ABC):
 
     def load_series(self, period: int) -> []:
         return self.__load_time_frame_from_mongo_db(period)
+
+    def save_solution_run(self, period: int, delta_solution_run_json_friendly: dict):
+        collection_name = 'solution.result.' + self.delta_solution_config.symbol + "." + str(period)
+        self.mongo_db[collection_name].insert_one(delta_solution_run_json_friendly)
 
 
 def get_repository(delta_solution_config: DeltaSolutionConfig) -> Repository:
