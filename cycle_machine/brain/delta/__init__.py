@@ -20,7 +20,7 @@ class DeltaSolution:
         return False
 
     def get_periods_above(self, period):
-        return [k for k in self.periods.keys() if k > period]
+        return [p for p in self.config.periods_asc() if p > period]
 
     def calculate_and_return_period(self, bar_sequence: [], period: int, quadrant: int = 0) -> DeltaSolutionPeriod:
         self.periods[period] = DeltaSolutionPeriod(bar_sequence, self.period_configurations[period], quadrant)
