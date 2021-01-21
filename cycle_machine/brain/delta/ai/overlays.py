@@ -1,9 +1,8 @@
+import json
 from datetime import datetime
 
 import jsonpickle
-import json
 
-from cycle_machine.brain.repository import Repository
 from cycle_machine.brain.series import Bar
 
 
@@ -30,16 +29,16 @@ def _cycle_time_coordinates(overlay_series: [Bar], overlay_solution_run):
     return cycle_time_coordinates
 
 
-def _cycle_inversion_identifiers(solution_run):
+def _cycle_first_delta_points(solution_run):
     cycles = solution_run['delta_points_cycles']['cycles']
 
-    cycle_inversions = []
+    first_delta_points = []
 
     for c in cycles:
-        cycle_inversions.append(cycles[c][0]['inversion'])
+        first_delta_points.append(cycles[c][0])
         pass
 
-    return cycle_inversions
+    return first_delta_points
 
 
 def _find_nearest_bar_index_for_time(series: [Bar], t: datetime):
@@ -49,43 +48,47 @@ def _find_nearest_bar_index_for_time(series: [Bar], t: datetime):
     return bar_index
 
 
-def _time_frame_coordinates_bar_indexes(overlay_series: [Bar], time_frame_coordinates_for_cycles, inversions_for_cycles):
-    for i in range(0, len(inversions_for_cycles)):
+def _time_frame_coordinates_bar_indexes(overlay_series: [Bar], time_frame_coordinates_for_cycles, first_delta_point_for_cycles):
+    high_overlays = {}
+    low_overlays = {}
+
+    for i in range(0, len(first_delta_point_for_cycles)):
         c = time_frame_coordinates_for_cycles[str(i)]
+        i_str = str(i)
+        high_overlays[str(i_str)] = {}
+        low_overlays[str(i_str)] = {}
+
+        if first_delta_point_for_cycles[i]['position'] == 'high':
+            start_high = True
+        else:
+            start_high = False
+
+        if first_delta_point_for_cycles[i]['inversion']:
+            start_high = not start_high
 
         for k in c.keys():
             x1 = _find_nearest_bar_index_for_time(overlay_series, c[k][0])
             x2 = _find_nearest_bar_index_for_time(overlay_series, c[k][1])
-            print("z")
 
-        # _find_nearest_bar_index_for_time(overlay_series, c['1'][0])
-        # x1 = _find_nearest_bar_index_for_time(overlay_series, c[k][0])
-        # x2 = _find_nearest_bar_index_for_time(overlay_series, c[k][1])
+            if start_high:
+                high_overlays[i_str][k] = [x1, x2]
+            else:
+                low_overlays[i_str][k] = [x1, x2]
 
-        print("z")
-        pass
+            start_high = not start_high
 
-    high_overlays = []
-    low_overlays = []
     return [high_overlays, low_overlays]
 
 
 def compute_overlays(base_series: [Bar], overlay_series: [Bar], base_solution_run, overlay_solution_run):
     overlay_time_frame_coordinates = _cycle_time_coordinates(overlay_series, overlay_solution_run)
+    cycle_first_delta_points = _cycle_first_delta_points(overlay_solution_run)
 
-    # base_solution_run
-    # TODO the first cycle time and the base_solution_run start time should be the same!
+    high_overlays, low_overlays = _time_frame_coordinates_bar_indexes(base_series, overlay_time_frame_coordinates, cycle_first_delta_points)
+    overlay_dict = {
+        "high_overlays": high_overlays,
+        "low_overlays": low_overlays,
+        "period": overlay_solution_run['delta_points_cycles']['period']
+    }
 
-    base_solution_run_start_time = jsonpickle.loads(json.dumps(base_solution_run['delta_points_cycles']['start_time']))
-    cycles = overlay_solution_run['delta_points_cycles']['cycles']
-
-    inversions_for_overlay_cycle = _cycle_inversion_identifiers(overlay_solution_run)
-
-    _time_frame_coordinates_bar_indexes(base_series, overlay_time_frame_coordinates, inversions_for_overlay_cycle)
-
-    # repository.load_series(overlay_solution_run['delta_points_cycles']['period'])
-
-    print("z")
-    # TODO: Overlay onto base_solution run....
-    # TODO: Return best possible bars?
-
+    return overlay_dict

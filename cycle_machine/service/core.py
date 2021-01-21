@@ -74,6 +74,13 @@ def default_solution_run(symbol, period: int):
     return mongo_friendly_deserialize(repository.load_solution_run(period))
 
 
+@_app.route('/solution-overlays/<string:symbol>/<int:period>')
+def solution_overlays(symbol, period: int):
+    delta_solution_config = DeltaSolutionConfig(symbol)
+    repository = get_repository(delta_solution_config)
+    return mongo_friendly_deserialize(repository.load_solution_overlay(period))
+
+
 def instantiate_service():
     _logger.info("service: %s is starting." % _service_name)
     _app.run()

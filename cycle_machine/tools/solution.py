@@ -65,7 +65,8 @@ if args.compute_overlays is not None:
     base_solution_run = mongo_friendly_deserialize(repository.load_solution_run(base_period))
     overlay_solution_run = mongo_friendly_deserialize(repository.load_solution_run(overlay_period))
 
-    range_lines_above = compute_overlays(repository.load_series(1440), repository.load_series(2880), base_solution_run, overlay_solution_run)
+    overlay_2880 = compute_overlays(repository.load_series(1440), repository.load_series(2880), base_solution_run, overlay_solution_run)
+    repository.save_solution_overlay(1440, overlay_2880)
 
     print("z")
 

@@ -24,7 +24,16 @@ class Repository:
     def save_solution_run(self, period: int, delta_solution_run: DeltaSolutionRun) -> int:
         pass
 
+    @abc.abstractmethod
     def load_solution_run(self, period):
+        pass
+
+    @abc.abstractmethod
+    def save_solution_overlay(self, period: int, overlays: dict):
+        pass
+
+    @abc.abstractmethod
+    def load_solution_overlay(self, period: int) -> dict:
         pass
 
 
@@ -67,6 +76,17 @@ class MongoDbRepository(Repository, ABC):
 
     def load_solution_run(self, period: int):
         collection_name = 'solution.result.' + self.delta_solution_config.symbol + "." + str(period)
+        return self.mongo_db[collection_name].find_one()
+
+    def _overlay_collection(self, period: int):
+        pass
+
+    def save_solution_overlay(self, period: int, overlay: dict):
+        collection_name = 'solution.result.' + self.delta_solution_config.symbol + "." + str(period) + ".overlays"
+        self.mongo_db[collection_name].insert_one(overlay)
+
+    def load_solution_overlay(self, period: int) -> dict:
+        collection_name = 'solution.result.' + self.delta_solution_config.symbol + "." + str(period) + ".overlays"
         return self.mongo_db[collection_name].find_one()
 
 
