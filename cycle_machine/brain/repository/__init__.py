@@ -5,6 +5,7 @@ from pymongo import MongoClient
 
 from cycle_machine.brain.delta.config import DeltaSolutionConfig
 from cycle_machine.brain.delta.solution import DeltaSolutionRun
+from cycle_machine.brain.repository.mapper.delta_solution_run import mongo_friendly_deserialize
 from cycle_machine.brain.series import Bar
 from cycle_machine.config import MONGO_DB_HOSTNAME, MONGO_DB_PORT, MONGO_DB_DBNAME
 
@@ -85,9 +86,15 @@ class MongoDbRepository(Repository, ABC):
         collection_name = 'solution.result.' + self.delta_solution_config.symbol + "." + str(period) + ".overlays"
         self.mongo_db[collection_name].insert_one(overlay)
 
-    def load_solution_overlay(self, period: int) -> dict:
+    def load_solution_overlay(self, period: int) -> []:
         collection_name = 'solution.result.' + self.delta_solution_config.symbol + "." + str(period) + ".overlays"
-        return self.mongo_db[collection_name].find_one()
+        cursor = self.mongo_db[collection_name].find()
+        overlays = []
+
+        for overlay in cursor:
+            overlays.append(mongo_friendly_deserialize(overlay))
+
+        return overlays
 
 
 def get_repository(delta_solution_config: DeltaSolutionConfig) -> Repository:

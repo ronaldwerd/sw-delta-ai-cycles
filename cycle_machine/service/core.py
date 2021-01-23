@@ -78,7 +78,7 @@ def default_solution_run(symbol, period: int):
 def solution_overlays(symbol, period: int):
     delta_solution_config = DeltaSolutionConfig(symbol)
     repository = get_repository(delta_solution_config)
-    return mongo_friendly_deserialize(repository.load_solution_overlay(period))
+    return json.dumps(repository.load_solution_overlay(period))
 
 
 def instantiate_service():

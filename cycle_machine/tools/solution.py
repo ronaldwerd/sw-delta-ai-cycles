@@ -57,17 +57,17 @@ if args.compute_cycles is True:
 
 if args.compute_overlays is not None:
     base_period = 1440
-    overlay_period = 2880
 
     delta_solution_config = DeltaSolutionConfig(args.compute_symbol)
     repository = get_repository(delta_solution_config)
+    delta_solution = DeltaSolution(args.compute_symbol)
+    periods_for_overlay = delta_solution.get_periods_above(base_period)
 
     base_solution_run = mongo_friendly_deserialize(repository.load_solution_run(base_period))
-    overlay_solution_run = mongo_friendly_deserialize(repository.load_solution_run(overlay_period))
 
-    overlay_2880 = compute_overlays(repository.load_series(1440), repository.load_series(2880), base_solution_run, overlay_solution_run)
-    repository.save_solution_overlay(1440, overlay_2880)
+    for p in periods_for_overlay:
+        overlay_solution_run = mongo_friendly_deserialize(repository.load_solution_run(p))
+        overlay_result = compute_overlays(repository.load_series(base_period), repository.load_series(p), base_solution_run, overlay_solution_run)
+        repository.save_solution_overlay(base_period, overlay_result)
 
     print("z")
-
-    pass
