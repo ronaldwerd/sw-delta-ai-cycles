@@ -32,6 +32,7 @@ periods = delta_solution_config.periods_asc()
 
 ds = DeltaSolution(args.compute_symbol)
 
+
 if args.compute_cycles is True:
     print("Computing cycles for: " + args.compute_symbol)
 

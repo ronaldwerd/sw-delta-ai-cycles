@@ -41,40 +41,41 @@ class DeltaSolutionConfig:
     def refresh(self):
         json_config = os.path.join(config.SOLUTION_DIR, self.symbol + '.json')
 
-        with open(json_config) as file:
-            file_contents = file.read()
+        if os.path.exists(json_config):
+            with open(json_config) as file:
+                file_contents = file.read()
 
-            md5 = hashlib.md5()
-            md5.update(file_contents.encode())
-            md5_digest = md5.hexdigest()
+                md5 = hashlib.md5()
+                md5.update(file_contents.encode())
+                md5_digest = md5.hexdigest()
 
-            if self.__md5_check_sum == md5_digest:
-                return False
+                if self.__md5_check_sum == md5_digest:
+                    return False
 
-            self.__md5_check_sum = md5_digest
+                self.__md5_check_sum = md5_digest
 
-            json_dict = json.loads(file_contents)
+                json_dict = json.loads(file_contents)
 
-            self.data_source = json_dict['data_source']
+                self.data_source = json_dict['data_source']
 
-            periods_ascending = sorted(json_dict['periods'], key=lambda k: k['period'], reverse=True)
-            data_source = json_dict['data_source']
+                periods_ascending = sorted(json_dict['periods'], key=lambda k: k['period'], reverse=True)
+                data_source = json_dict['data_source']
 
-            for p in periods_ascending:
-                if 'start_date' in p:
-                    if 'enabled' in p and p['enabled'] is False:
-                        continue
+                for p in periods_ascending:
+                    if 'start_date' in p:
+                        if 'enabled' in p and p['enabled'] is False:
+                            continue
 
-                    dpc = DeltaPeriodCalculationConfig(self.symbol,
-                                                       p['period'],
-                                                       p['bars_in_distribution'],
-                                                       p['distributions'],
-                                                       p['delta_points'],
-                                                       parser.parse(p['start_date']),
-                                                       data_source)
-                    self._periods[p['period']] = dpc
+                        dpc = DeltaPeriodCalculationConfig(self.symbol,
+                                                           p['period'],
+                                                           p['bars_in_distribution'],
+                                                           p['distributions'],
+                                                           p['delta_points'],
+                                                           parser.parse(p['start_date']),
+                                                           data_source)
+                        self._periods[p['period']] = dpc
 
-            return True
+                return True
 
     def periods_asc(self):
         periods_asc = [k for k in self._periods]

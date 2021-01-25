@@ -8,6 +8,15 @@ from cycle_machine.brain.delta.solution import DeltaSolutionRun
 from cycle_machine.brain.repository.mapper.delta_solution_run import mongo_friendly_deserialize
 from cycle_machine.brain.series import Bar
 from cycle_machine.config import MONGO_DB_HOSTNAME, MONGO_DB_PORT, MONGO_DB_DBNAME
+from cycle_machine.tools.mt4reader import History
+
+
+def _collection_name_for_data(symbol: str, period: int):
+    return "market.data.fx.%s.%d" % (symbol, period)
+
+
+def _collection_name_for_solution_result(symbol: str, period: int):
+    return "solution.result.%s.%d" % (symbol, period)
 
 
 class Repository:
@@ -37,6 +46,10 @@ class Repository:
     def load_solution_overlay(self, period: int) -> dict:
         pass
 
+    @abc.abstractmethod
+    def save_mt4_history(self, history: History, period: int):
+        pass
+
 
 class CacheFileRepository(Repository, ABC):
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
@@ -53,8 +66,7 @@ class CacheFileRepository(Repository, ABC):
 class MongoDbRepository(Repository, ABC):
     def __load_time_frame_from_mongo_db(self, period) -> []:
         bars = []
-        collection_name = 'market.data.fx.' + self.delta_solution_config.symbol + "." + str(period)
-        cursor = self.mongo_db[collection_name].find().sort("date_time")
+        cursor = self.mongo_db[_collection_name_for_data(self.delta_solution_config.symbol, period)].find().sort("date_time")
 
         for market_bar in cursor:
             b = Bar(market_bar['date_time'], market_bar['high'], market_bar['low'], market_bar['open'], market_bar['close'])
@@ -95,6 +107,17 @@ class MongoDbRepository(Repository, ABC):
             overlays.append(mongo_friendly_deserialize(overlay))
 
         return overlays
+
+    def save_mt4_history(self, history: History, period):
+        collection_name = _collection_name_for_data(self.delta_solution_config.symbol, period)
+        self.mongo_db[collection_name].delete_many({})
+
+        bar_count = 0
+        for b in history.bars:
+            self.mongo_db[collection_name].insert_one(b.__dict__)
+            bar_count = bar_count + 1
+
+        return bar_count
 
 
 def get_repository(delta_solution_config: DeltaSolutionConfig) -> Repository:

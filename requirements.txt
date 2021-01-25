@@ -6,3 +6,4 @@ setuptools ~= 39.1.0
 python-dateutil ~= 2.8.1
 sortedcontainers ~= 2.3.0
 jsonpickle ~= 1.5.0
+mt4-hst ~= 0.1.2
