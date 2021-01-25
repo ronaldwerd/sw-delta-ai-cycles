@@ -5,7 +5,7 @@ from pymongo import MongoClient
 
 from cycle_machine.brain.delta.config import DeltaSolutionConfig
 from cycle_machine.brain.delta.solution import DeltaSolutionRun
-from cycle_machine.brain.repository.mapper.delta_solution_run import mongo_friendly_deserialize
+from cycle_machine.repository.mapper.delta_solution_run import mongo_friendly_deserialize
 from cycle_machine.brain.series import Bar
 from cycle_machine.config import MONGO_DB_HOSTNAME, MONGO_DB_PORT, MONGO_DB_DBNAME
 from cycle_machine.tools.mt4reader import History

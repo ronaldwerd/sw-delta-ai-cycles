@@ -1,14 +1,11 @@
 import argparse
 import timeit
-import json
-import jsonpickle
 
 from cycle_machine.brain.delta import DeltaSolution
 from cycle_machine.brain.delta.ai.overlays import compute_overlays
 from cycle_machine.brain.delta.config import DeltaSolutionConfig
-from cycle_machine.brain.repository import get_repository, MongoDbRepository
-from cycle_machine.brain.repository.mapper.delta_solution_run import mongo_friendly_serialize, mongo_friendly_deserialize
-from cycle_machine.brain.series import Bar
+from cycle_machine.repository import get_repository, MongoDbRepository
+from cycle_machine.repository.mapper.delta_solution_run import mongo_friendly_serialize, mongo_friendly_deserialize
 
 parser = argparse.ArgumentParser(description='Solution interaction tools.')
 parser.add_argument('--symbol', dest='compute_symbol', required=True,

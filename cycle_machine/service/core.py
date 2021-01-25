@@ -6,8 +6,8 @@ from flask import Flask
 from flask_cors import CORS
 
 from cycle_machine.brain.delta import DeltaSolutionConfig
-from cycle_machine.brain.repository import get_repository
-from cycle_machine.brain.repository.mapper.delta_solution_run import mongo_friendly_deserialize
+from cycle_machine.repository import get_repository
+from cycle_machine.repository.mapper.delta_solution_run import mongo_friendly_deserialize
 from cycle_machine.logger import logger
 
 _service_name = "cycle_machine"

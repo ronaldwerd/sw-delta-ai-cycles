@@ -4,7 +4,7 @@ import os
 import re
 
 from cycle_machine.brain.delta import DeltaSolutionConfig
-from cycle_machine.brain.repository import Repository, MongoDbRepository
+from cycle_machine.repository import MongoDbRepository
 from cycle_machine.tools.mt4reader import History
 
 
