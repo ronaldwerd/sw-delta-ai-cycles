@@ -22,11 +22,22 @@ import sys
 import csv
 
 
+MT4_DATE_FORMAT = '%Y.%m.%d %H:%M'
+
+
 class Bar(object):
-    def __init__(self, x):
-        if len(x) != 44:
+    def __init__(self):
+        self.time = None
+        self.open = None
+        self.low = None
+        self.high = None
+        self.close = None
+        self.volume = None
+
+    def from_hst_record(self, hst_record):
+        if len(hst_record) != 44:
             raise ValueError('Not a full record')
-        t, o, l, h, c, v = struct.unpack('<iddddd', x)
+        t, o, l, h, c, v = struct.unpack('<iddddd', hst_record)
 
         self.time = datetime.datetime.utcfromtimestamp(t)
         self.open = o
@@ -34,6 +45,15 @@ class Bar(object):
         self.high = h
         self.close = c
         self.volume = v
+
+    def from_csv_record(self, csv_record):
+        csv_date_time = csv_record[0] + " " + csv_record[1]
+        self.time = datetime.datetime.strptime(csv_date_time, MT4_DATE_FORMAT)
+        self.open = csv_record[2]
+        self.high = csv_record[3]
+        self.low = csv_record[4]
+        self.close = csv_record[5]
+        self.volume = csv_record[6]
 
     def __repr__(self):
         return '%s O:%f L:%f H:%f C:%f' % (self.time, self.open, self.low,
@@ -55,24 +75,42 @@ class History(object):
         self.timesign = datetime.datetime.utcfromtimestamp(timesign)
 
         # skip
-        f.seek(13*4, 1)
+        f.seek(13 * 4, 1)
         self.bars = []
 
         while True:
-            x = f.read(44)
-            if len(x) != 44:
+            hst_record = f.read(44)
+
+            if len(hst_record) != 44:
                 break
-            self.bars.append(Bar(x))
+
+            b = Bar()
+            b.from_hst_record(hst_record)
+            self.bars.append(b)
 
 
-def convert(in_file, out_file):
+def get_bars_from_csv(csv_file) -> []:
+    with open(csv_file, 'r') as f:
+        mt4_csv = csv.reader(f)
+
+        bar_list = []
+
+        for r in mt4_csv:
+            b = Bar()
+            b.from_csv_record(r)
+            bar_list.append(b)
+
+        return bar_list
+
+
+def convert_hst_to_csv(hst_file, csv_file):
     """
     Converts from HST to CSV
     """
-    with open(in_file, 'rb') as f:
+    with open(hst_file, 'rb') as f:
         history = History(f)
 
-    with open(out_file, 'w') as f:
+    with open(csv_file, 'w') as f:
         writer = csv.writer(f)
         writer.writerow(['time', 'open', 'close', 'high', 'low', 'volume'])
         for b in history.bars:
@@ -86,7 +124,7 @@ def main():
 
     args = parser.parse_args()
 
-    convert(args.in_file, args.out_file)
+    convert_hst_to_csv(args.in_file, args.out_file)
 
 
 if __name__ == '__main__':

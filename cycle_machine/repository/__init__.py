@@ -109,12 +109,20 @@ class MongoDbRepository(Repository, ABC):
         return overlays
 
     def save_mt4_history(self, history: History, period):
+        return self.save_mt4_history_bars(history.bars, period)
+
+    def save_mt4_history_bars(self, bars: [], period):
         collection_name = _collection_name_for_data(self.delta_solution_config.symbol, period)
         self.mongo_db[collection_name].delete_many({})
 
         bar_count = 0
-        for b in history.bars:
-            self.mongo_db[collection_name].insert_one(b.__dict__)
+        for b in bars:
+            try:
+                self.mongo_db[collection_name].insert_one(b.__dict__)
+            except Exception as e:
+                print(e)
+                pass
+
             bar_count = bar_count + 1
 
         return bar_count
