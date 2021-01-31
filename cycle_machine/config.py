@@ -35,3 +35,14 @@ if 'mongodb' in config:
 if not os.path.exists(CACHE_DIR):
     os.path.makedirs(CACHE_DIR)
 
+OANDA_ACCOUNT = None
+OANDA_AUTH_TOKEN = None
+
+if 'oanda' in config:
+    OANDA_ACCOUNT = config['oanda']['account-id']
+    OANDA_AUTH_TOKEN = config['oanda']['auth-token']
+
+FINNHUB_AUTH_TOKEN = None
+
+if 'finnhub' in config:
+    FINNHUB_AUTH_TOKEN = config['finnhub']['auth-token']

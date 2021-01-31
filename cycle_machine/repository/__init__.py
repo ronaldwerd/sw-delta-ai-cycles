@@ -30,6 +30,10 @@ class Repository:
         """Load a series from a data source. such as a file, bytestream or database"""
         pass
 
+    def get_last_bar(self, period: int) -> Bar:
+        """Get the very last bar for a series. This useful for data synchronization"""
+        pass
+
     @abc.abstractmethod
     def save_solution_run(self, period: int, delta_solution_run: DeltaSolutionRun) -> int:
         pass
@@ -74,6 +78,10 @@ class MongoDbRepository(Repository, ABC):
 
         return bars
 
+    def __load_last_bar_from_mongo_db(self, period) -> Bar:
+        market_bar = self.mongo_db[_collection_name_for_data(self.delta_solution_config.symbol, period)].find_one(sort=[('time', -1)])
+        return Bar(market_bar['time'], market_bar['high'], market_bar['low'], market_bar['open'], market_bar['close'])
+
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
         super().__init__(delta_solution_config)
 
@@ -82,6 +90,9 @@ class MongoDbRepository(Repository, ABC):
 
     def load_series(self, period: int) -> []:
         return self.__load_time_frame_from_mongo_db(period)
+
+    def get_last_bar(self, period: int) -> Bar:
+        return self.__load_last_bar_from_mongo_db(period)
 
     def save_solution_run(self, period: int, delta_solution_run_json_friendly: dict):
         collection_name = 'solution.result.' + self.delta_solution_config.symbol + "." + str(period)

@@ -1,0 +1,12 @@
+7860 -> 2009.01.06 16:00
+3840 -> 2009.01.06 16:00
+
+
+
+
+
+# DB Dump and restore
+mongodump --host localhost --port 27017 --db delta-ai --out .
+mongorestore --host localhost --port 27017 --db delta-ai-restore delta-ai/
+
+

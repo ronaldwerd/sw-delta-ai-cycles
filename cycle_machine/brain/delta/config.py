@@ -34,6 +34,9 @@ class DeltaSolutionConfig:
         self.symbol = symbol
         self._periods = {}
 
+        self.data_feed_broker = ""
+        self.data_feed_symbol = ""
+
         self.__md5_check_sum = None
 
         self.refresh()
@@ -57,6 +60,8 @@ class DeltaSolutionConfig:
                 json_dict = json.loads(file_contents)
 
                 self.data_source = json_dict['data_source']
+                self.data_feed_broker = json_dict['data_feed']['broker']
+                self.data_feed_symbol = json_dict['data_feed']['symbol']
 
                 periods_ascending = sorted(json_dict['periods'], key=lambda k: k['period'], reverse=True)
                 data_source = json_dict['data_source']
