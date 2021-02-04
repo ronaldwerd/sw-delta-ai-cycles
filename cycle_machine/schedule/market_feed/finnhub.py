@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 import pytz
-
+from tzlocal import get_localzone
 
 import httpx
 from cycle_machine.brain.delta import DeltaSolutionConfig
@@ -11,10 +11,26 @@ from pytz import reference
 
 
 class FinnHubMarketFeed():
+    def set_timezones(self):
+        self.local_timezone = get_localzone()
+        self.broker_timezone = pytz.timezone("EET")
+        # TODO: Do we switch in the summer? DST/EET ? we will find out
+
+    def change_datetime_for_bar(self, bar_datetime: datetime):
+        localized_timestamp = self.local_timezone.localize(bar_datetime)
+        return localized_timestamp.astimezone(self.broker_timezone)
+
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
+        self._delta_solution_config = delta_solution_config
+
         self._finnHubUrl = "https://finnhub.io/api/v1"
-        self.token = FINNHUB_AUTH_TOKEN
-        self.headers = {'X-Finnhub-Token': self.token}
+        self._token = FINNHUB_AUTH_TOKEN
+        self._headers = {'X-Finnhub-Token': self._token}
+
+        self.local_timezone = None
+        self.broker_timezone = None
+
+        self.set_timezones()
 
     @staticmethod
     def __get_resolution(period: int):
@@ -30,28 +46,21 @@ class FinnHubMarketFeed():
         return 1
 
 
-    @staticmethod
-    def _finnmhub_response_reduce_to_higher_period(finnhub_response: dict, period: int):
+    def _finnmhub_response_reduce_to_higher_period(self, finnhub_response: dict, period: int):
+
+        pre_values = self._finnhub_response_to_bar_list(finnhub_response)
+
         return finnhub_response
         pass
 
-    @staticmethod
-    def _finnhub_response_to_bar_list(finnhub_response: dict) -> [Bar]:
+    def _finnhub_response_to_bar_list(self, finnhub_response: dict) -> [Bar]:
         open_list = finnhub_response['o']
         bar_list = []
 
-        """
-        timezone = pytz.timezone("America/Los_Angeles")
-        d_aware = timezone.localize(d)
-        """
-
-        for i in range(0, len(open_list)):
-            two_hours = datetime.timedelta(hours=2)
-            bar_date_time = datetime.fromtimestamp(finnhub_response['t'][i]),
-
-
+        # We do not add the last bar because it is not complete.
+        for i in range(0, len(open_list) - 1):
             b = Bar(
-
+                self.change_datetime_for_bar(datetime.fromtimestamp(finnhub_response['t'][i])),
                 finnhub_response['h'][i],
                 finnhub_response['l'][i],
                 finnhub_response['o'][i],
@@ -61,71 +70,21 @@ class FinnHubMarketFeed():
 
         return bar_list
 
-    def get_bars_for(self, period: int, start_time: datetime, today_time: datetime):
-        """"""
-
-        # yesterday = datetime.now() - timedelta(1)
-
-        """
-            # TODO: SO DAMN USEFUL!!!
-            # datetime.now().replace(microsecond=0, second=0, minute=0, hour=0)
-            # TODO: YEAH YEAH!!!
-            
-        """
-        my_timestamp = datetime.fromtimestamp(1611180000)
-
-        # create both timezone objects
-        local_timezone_str = reference.LocalTimezone().tzname(datetime.now())
-        old_timezone = pytz.timezone("America/New_York")
-        new_timezone = pytz.timezone("Israel")
-
-        # tzlocal()).tzname()
-
-        # two-step process
-
-        localized_timestamp = old_timezone.localize(my_timestamp)
-        new_timezone_timestamp = localized_timestamp.astimezone(new_timezone)
-
-        print("z")
-
+    def get_bars_for(self, period: int, start_time: datetime, end_time: datetime):
         resolution = self.__get_resolution(period)
 
-        start_time.timestamp()
+        bar_url = self._finnHubUrl + "/forex/candle?symbol=%s&resolution=%s&from=%d&to=%d" \
+                  % (self._delta_solution_config.data_feed_symbol, resolution, start_time.timestamp(), end_time.timestamp())
 
-        from_date = 1611187200
-        to_date = 1611705600
-
-        bar_url = self._finnHubUrl + "/forex/candle?symbol=FXPRO:41&resolution=%s&from=%d&to=%d" \
-                  % (resolution, start_time.timestamp(), to_date)
-
-        r = httpx.get(bar_url, headers=self.headers)
+        r = httpx.get(bar_url, headers=self._headers)
         json_data = json.loads(r.content)
         json_data = self._finnmhub_response_reduce_to_higher_period(json_data, period)
         bar_list = self._finnhub_response_to_bar_list(json_data)
 
-        print("z")
-        pass
+        return bar_list
 
 
 if __name__ == '__main__':
     solution_config = DeltaSolutionConfig("GOLD")
     feed = FinnHubMarketFeed(solution_config)
     feed.get_bars_for(1440)
-
-
-"""
-
-2019-10-12T07:20:50.52Z
-
-2021-01-25T00:00:00.00Z
-
-"""
-
-
-"""
-FXCM...
-
-U10D2449090
-Qqbt2
-
-"""
