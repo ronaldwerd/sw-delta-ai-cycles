@@ -17,5 +17,7 @@ def mongo_friendly_serialize(dsr: DeltaSolutionRun) -> dict:
 
 
 def mongo_friendly_deserialize(solution_run_obj):
-    solution_run_obj.pop('_id', None)
+    if solution_run_obj is not None:
+        solution_run_obj.pop('_id', None)
+
     return solution_run_obj

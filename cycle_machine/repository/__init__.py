@@ -54,6 +54,10 @@ class Repository:
     def save_mt4_history(self, history: History, period: int):
         pass
 
+    @abc.abstractmethod
+    def save_bar(self, bar: Bar):
+        pass
+
 
 class CacheFileRepository(Repository, ABC):
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
@@ -79,8 +83,8 @@ class MongoDbRepository(Repository, ABC):
         return bars
 
     def __load_last_bar_from_mongo_db(self, period) -> Bar:
-        market_bar = self.mongo_db[_collection_name_for_data(self.delta_solution_config.symbol, period)].find_one(sort=[('time', -1)])
-        return Bar(market_bar['time'], market_bar['high'], market_bar['low'], market_bar['open'], market_bar['close'])
+        market_bar = self.mongo_db[_collection_name_for_data(self.delta_solution_config.symbol, period)].find_one(sort=[('date_time', -1)])
+        return Bar(market_bar['date_time'], market_bar['high'], market_bar['low'], market_bar['open'], market_bar['close'])
 
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
         super().__init__(delta_solution_config)
@@ -121,6 +125,10 @@ class MongoDbRepository(Repository, ABC):
 
     def save_mt4_history(self, history: History, period):
         return self.save_mt4_history_bars(history.bars, period)
+
+    def save_bar(self, period, bar: Bar):
+        collection_name = _collection_name_for_data(self.delta_solution_config.symbol, period)
+        return self.mongo_db[collection_name].insert_one(bar.__dict__)
 
     def save_mt4_history_bars(self, bars: [], period):
         collection_name = _collection_name_for_data(self.delta_solution_config.symbol, period)

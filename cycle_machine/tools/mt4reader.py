@@ -27,7 +27,7 @@ MT4_DATE_FORMAT = '%Y.%m.%d %H:%M'
 
 class Bar(object):
     def __init__(self):
-        self.time = None
+        self.date_time = None
         self.open = None
         self.low = None
         self.high = None
@@ -39,7 +39,7 @@ class Bar(object):
             raise ValueError('Not a full record')
         t, o, l, h, c, v = struct.unpack('<iddddd', hst_record)
 
-        self.time = datetime.datetime.utcfromtimestamp(t)
+        self.date_time = datetime.datetime.utcfromtimestamp(t)
         self.open = o
         self.low = l
         self.high = h
@@ -48,7 +48,7 @@ class Bar(object):
 
     def from_csv_record(self, csv_record):
         csv_date_time = csv_record[0] + " " + csv_record[1]
-        self.time = datetime.datetime.strptime(csv_date_time, MT4_DATE_FORMAT)
+        self.date_time = datetime.datetime.strptime(csv_date_time, MT4_DATE_FORMAT)
         self.open = csv_record[2]
         self.high = csv_record[3]
         self.low = csv_record[4]
@@ -114,7 +114,7 @@ def convert_hst_to_csv(hst_file, csv_file):
         writer = csv.writer(f)
         writer.writerow(['time', 'open', 'close', 'high', 'low', 'volume'])
         for b in history.bars:
-            writer.writerow([b.time, b.open, b.close, b.high, b.low, b.volume])
+            writer.writerow([b.date_time, b.open, b.close, b.high, b.low, b.volume])
 
 
 def main():
