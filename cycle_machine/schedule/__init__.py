@@ -6,29 +6,6 @@ from cycle_machine.repository import get_repository
 
 from datetime import datetime, timedelta
 
-symbols = ['GOLD']
-
-
-def time_gap(symbol, period):
-    pass
-
-
-def round_down_time(time: datetime, period: int):
-    if period % 1440 == 0:
-        datetime.now().replace(microsecond=0, second=0, minute=0, hour=0)
-
-        days = period / 1440
-
-        if(days > 1):
-            pass
-
-
-    if period % 60 == 0:
-        datetime.now().replace(microsecond=0, second=0, minute=0)
-
-    pass
-
-
 def sync_new_bars(delta_solution_config: DeltaSolutionConfig, period: int):
     feed = get_market_feed(delta_solution_config)
     repository = get_repository(delta_solution_config)
@@ -38,48 +15,36 @@ def sync_new_bars(delta_solution_config: DeltaSolutionConfig, period: int):
     if len(bars) > 0:
         bars.pop(0)
 
-    return None
-
     new_bars = []
     for b in bars:
         new_bars.append(repository.save_bar(period, b))
 
     return new_bars
 
-# def log_and_summarize_created_bars(symbol: str, period: int, created_bars: [Bar]):
-#    pass
+def log_and_summarize_created_bars(symbol: str, period: int, created_bars: []):
+    bar_or_bars = "bar"
+
+    if len(created_bars) > 1:
+        bar_or_bars = "bars"
+
+    log_line = "%s - %d synced %d new %s" % (symbol, period, len(created_bars), bar_or_bars)
+
+    print(log_line)
+
+    return log_line
 
 if __name__ == '__main__':
     market_feeds_for_symbols = []
 
     scheduler = BlockingScheduler()
 
-    """
-    for s in symbols:
-        delta_solution_configuration = DeltaSolutionConfig(s)
-        feed = get_market_feed(delta_solution_configuration)
-
-        for p in delta_solution_configuration.periods_asc():
-            
-            pass
-
-        p = 5
-
-        job_id = s + "_" + str(p)
-        scheduler.add_job(lambda: print("Lambda WTF"), seconds=3, id=job_id)
-
-        break
-
-        # Do we thread this here?
-    """
-
-    #
-    delta_solution_config = DeltaSolutionConfig("GOLD")
+    symbol = "GOLD"
+    delta_solution_config = DeltaSolutionConfig(symbol)
 
     for p in delta_solution_config.periods_asc():
-        p = 120
+        # p = 120
         created_bars = sync_new_bars(delta_solution_config, p)
-        break
+        log_and_summarize_created_bars(symbol, p, created_bars)
 
     print("z")
     # scheduler.start()

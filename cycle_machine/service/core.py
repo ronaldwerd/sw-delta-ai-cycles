@@ -9,11 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from cycle_machine.brain.delta import DeltaSolutionConfig
 from cycle_machine.repository import get_repository
 from cycle_machine.repository.mapper.delta_solution_run import mongo_friendly_deserialize
-from cycle_machine.logger import logger
+from cycle_machine.logger import get_logger_for
 
 
 app = FastAPI()
-_logger = logger
+_logger = get_logger_for("service-api")
 _service_name = "cycle_machine"
 
 app.add_middleware(

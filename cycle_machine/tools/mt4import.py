@@ -23,6 +23,7 @@ def import_hst_file(hst_file, symbol, period):
         history = History(f)
         delta_solution_config = DeltaSolutionConfig(symbol)
         repository = MongoDbRepository(delta_solution_config)
+        # repository.
         bars_inserted = repository.save_mt4_history(history, period)
 
         print("%d bars inserted. [OK]" % bars_inserted)

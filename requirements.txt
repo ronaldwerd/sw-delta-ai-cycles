@@ -9,3 +9,4 @@ mt4-hst ~= 0.1.2
 apscheduler ~= 3.7.0
 fastapi ~= 0.63.0
 uvicorn ~= 0.13.3
+mpmath ~= 1.1.0

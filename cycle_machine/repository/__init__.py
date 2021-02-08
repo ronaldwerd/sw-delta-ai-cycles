@@ -58,6 +58,10 @@ class Repository:
     def save_bar(self, bar: Bar):
         pass
 
+    @abc.abstractmethod
+    def delete_series(self, period: int) -> int:
+        pass
+
 
 class CacheFileRepository(Repository, ABC):
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
@@ -84,6 +88,10 @@ class MongoDbRepository(Repository, ABC):
 
     def __load_last_bar_from_mongo_db(self, period) -> Bar:
         market_bar = self.mongo_db[_collection_name_for_data(self.delta_solution_config.symbol, period)].find_one(sort=[('date_time', -1)])
+
+        # if market_bar == None:
+        #    print("WTF?")
+
         return Bar(market_bar['date_time'], market_bar['high'], market_bar['low'], market_bar['open'], market_bar['close'])
 
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
@@ -145,6 +153,11 @@ class MongoDbRepository(Repository, ABC):
             bar_count = bar_count + 1
 
         return bar_count
+
+    def delete_series(self, period) -> int:
+        _collection_name_for_data(self.delta_solution_config.symbol, period)
+        self.mongo_db[collection_name].delete_many({})
+        pass
 
 
 def get_repository(delta_solution_config: DeltaSolutionConfig) -> Repository:

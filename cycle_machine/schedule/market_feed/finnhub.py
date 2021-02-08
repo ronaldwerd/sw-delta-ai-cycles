@@ -1,14 +1,17 @@
 import json
-from datetime import datetime
-import pytz
-from tzlocal import get_localzone
 import math
+from datetime import datetime
+
 import httpx
+import mpmath
+import pytz
 from cycle_machine.brain.delta import DeltaSolutionConfig
-from cycle_machine.config import FINNHUB_AUTH_TOKEN
 from cycle_machine.brain.series import Bar
-from pytz import reference
-import numpy
+from cycle_machine.config import FINNHUB_AUTH_TOKEN
+from tzlocal import get_localzone
+from cycle_machine import logger
+
+_logger = logger.get_logger_for("finnhub_market_feed")
 
 class FinnHubMarketFeed():
     def set_timezones(self):
@@ -60,10 +63,10 @@ class FinnHubMarketFeed():
         for i in range(0, len(open_list) - 1):
             b = Bar(
                 self.change_datetime_for_bar(datetime.fromtimestamp(finnhub_response['t'][i])),
-                finnhub_response['h'][i],
-                finnhub_response['l'][i],
-                finnhub_response['o'][i],
-                finnhub_response['c'][i],
+                mpmath.mpf(finnhub_response['h'][i]),
+                mpmath.mpf(finnhub_response['l'][i]),
+                mpmath.mpf(finnhub_response['o'][i]),
+                mpmath.mpf(finnhub_response['c'][i]),
             )
             bar_list.append(b)
 
@@ -95,8 +98,8 @@ class FinnHubMarketFeed():
                 self.change_datetime_for_bar(datetime.fromtimestamp(finnhub_response['t'][i])),
                 max(finnhub_response['h'][i:aggregate_value_range]),
                 min(finnhub_response['l'][i:aggregate_value_range]),
-                numpy.average(finnhub_response['o'][i:aggregate_value_range]),
-                numpy.average(finnhub_response['c'][i:aggregate_value_range]),
+                finnhub_response['o'][i],
+                finnhub_response['c'][aggregate_value_range],
             )
 
             aggregate_bar_list.append(b)
@@ -111,14 +114,21 @@ class FinnHubMarketFeed():
         bar_url = self._finnHubUrl + "/forex/candle?symbol=%s&resolution=%s&from=%d&to=%d" \
                   % (self._delta_solution_config.data_feed_symbol, resolution, start_time.timestamp(), end_time.timestamp())
 
-        r = httpx.get(bar_url, headers=self._headers)
-        json_data = json.loads(r.content)
-        bar_list = self._parse_finnhub_response(json_data, period, resolution_period)
+        bar_list = []
+
+        try:
+            timeout = httpx.Timeout(60.0, connect=60.0)
+            r = httpx.get(bar_url, headers=self._headers, timeout=timeout)
+            json_data = json.loads(r.content)
+
+            if json_data['s'] == 'no_data' is True:
+                return []
+
+            bar_list = self._parse_finnhub_response(json_data, period, resolution_period)
+        except Exception as e:
+            _logger.error("Unable to get data for %s - %s" % (self._delta_solution_config.symbol, period))
+            _logger.debug(str(e) + " " + bar_url)
+            pass
 
         return bar_list
 
-
-if __name__ == '__main__':
-    solution_config = DeltaSolutionConfig("GOLD")
-    feed = FinnHubMarketFeed(solution_config)
-    feed.get_bars_for(1440)
