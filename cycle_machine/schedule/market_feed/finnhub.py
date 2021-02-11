@@ -19,9 +19,9 @@ class FinnHubMarketFeed():
         self.broker_timezone = pytz.timezone("EET")
         # TODO: Do we switch in the summer? DST/EET ? we will find out
 
-    def change_datetime_for_bar(self, bar_datetime: datetime):
+    def change_datetime_for_bar(self, bar_datetime: datetime, broker_timezone: str):
         localized_timestamp = self.local_timezone.localize(bar_datetime)
-        return localized_timestamp.astimezone(self.broker_timezone)
+        return localized_timestamp.astimezone(broker_timezone).replace(tzinfo=None)
 
     def __init__(self, delta_solution_config: DeltaSolutionConfig):
         self._delta_solution_config = delta_solution_config
@@ -55,49 +55,29 @@ class FinnHubMarketFeed():
 
         return resolution
 
-    def _finnhub_response_to_bar_list(self, finnhub_response: dict) -> [Bar]:
-        open_list = finnhub_response['o']
-        bar_list = []
-
-        # We do not add the last bar because it is not complete.
-        for i in range(0, len(open_list) - 1):
-            b = Bar(
-                self.change_datetime_for_bar(datetime.fromtimestamp(finnhub_response['t'][i])),
-                mpmath.mpf(finnhub_response['h'][i]),
-                mpmath.mpf(finnhub_response['l'][i]),
-                mpmath.mpf(finnhub_response['o'][i]),
-                mpmath.mpf(finnhub_response['c'][i]),
-            )
-            bar_list.append(b)
-
-        return bar_list
-
-
-    def _parse_finnhub_response(self, finnhub_response: dict, period: int, resolution_period: int) -> [Bar]:
+    def _parse_finnhub_response(self, finnhub_response: dict, period: int, resolution_period: int, resolution) -> [Bar]:
         if period % resolution_period < 0:
             raise ArithmeticError("Invalid combination of period %s and resolution_period %s" % period, resolution_period)
 
-        value_aggregate_length = period / resolution_period
-
-        if value_aggregate_length == 1:
-            return self._finnhub_response_to_bar_list(finnhub_response)
-
-        value_aggregate_length = int(value_aggregate_length)
-
-        pre_values = self._finnhub_response_to_bar_list(finnhub_response)
-        last_bar_index = (len(finnhub_response['c']) - 1) - (len(finnhub_response['c']) % 2)
+        value_aggregate_length = math.floor(period / resolution_period)
+        last_bar_index = (len(finnhub_response['c']) - 1) - (len(finnhub_response['c']) % value_aggregate_length)
 
         aggregate_bar_list = []
 
-        for i in range(0, last_bar_index, math.floor(value_aggregate_length)):
-            aggregate_value_range = i + value_aggregate_length
+        for i in range(0, last_bar_index, value_aggregate_length):
+            aggregate_value_range = i + (value_aggregate_length - 1)
 
-            high = aggregate_value_range - 1
+            if value_aggregate_length > 1:
+                high = max(finnhub_response['h'][i:aggregate_value_range])
+                low = min(finnhub_response['l'][i:aggregate_value_range])
+            else:
+                high = finnhub_response['h'][i]
+                low = finnhub_response['l'][i]
 
             b = Bar(
-                self.change_datetime_for_bar(datetime.fromtimestamp(finnhub_response['t'][i])),
-                max(finnhub_response['h'][i:aggregate_value_range]),
-                min(finnhub_response['l'][i:aggregate_value_range]),
+                self.change_datetime_for_bar(datetime.fromtimestamp(finnhub_response['t'][i]), self.broker_timezone),
+                high,
+                low,
                 finnhub_response['o'][i],
                 finnhub_response['c'][aggregate_value_range],
             )
@@ -117,15 +97,15 @@ class FinnHubMarketFeed():
         bar_list = []
 
         try:
-            timeout = httpx.Timeout(60.0, connect=60.0)
+            timeout = httpx.Timeout(200.0, connect=200.0)
             r = httpx.get(bar_url, headers=self._headers, timeout=timeout)
             json_data = json.loads(r.content)
 
-            if json_data['s'] == 'no_data' is True:
+            if json_data['s'] == 'no_data':
                 return []
 
-            bar_list = self._parse_finnhub_response(json_data, period, resolution_period)
-        except Exception as e:
+            bar_list = self._parse_finnhub_response(json_data, period, resolution_period,  resolution)
+        except httpx.HTTPError as e:
             _logger.error("Unable to get data for %s - %s" % (self._delta_solution_config.symbol, period))
             _logger.debug(str(e) + " " + bar_url)
             pass

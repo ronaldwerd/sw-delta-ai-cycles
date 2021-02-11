@@ -3,3 +3,4 @@ venv
 config.ini
 logs
 __pycache__
+temporary.txt

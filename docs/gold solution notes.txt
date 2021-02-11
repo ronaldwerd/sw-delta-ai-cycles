@@ -3,3 +3,107 @@ mongodump --host localhost --port 27017 --db delta-ai --out .
 mongorestore --host localhost --port 27017 --db delta-ai-restore delta-ai/
 
 
+# VERY USEFULL MongoDB Queries for examples...
+db.dropDatabase()
+
+
+db.getCollectionNames().sort()
+
+
+db['market.data.fx.GOLD.240'].find(
+    {
+        date_time: {
+            $gte: ISODate("2021-01-20T00:00:00.000Z"),
+            $lt: ISODate("2021-02-25T11:00:00.000Z")
+        }
+    }
+    ).sort({
+        date_time: -1
+    }
+);
+
+
+db['market.data.fx.GOLD.1440'].find({}).sort({
+       date_time: -1
+});
+
+
+db['market.data.fx.GOLD.120'].remove(
+    {
+        date_time: {
+            $gte: ISODate("2021-01-20T00:00:00.000Z"),
+            $lt: ISODate("2021-02-25T11:00:00.000Z")
+        }
+    }
+);
+
+
+db['market.data.fx.GOLD.1440'].remove({_id: {
+        $in: db['market.data.fx.GOLD.1440'].find({}).sort({
+                    date_time: -1
+             }).limit(12).toArray()
+             .map(function(doc) { return doc._id; })
+    }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+db['market.data.fx.GOLD.1440'].count()
+
+
+
+
+db['market.data.fx.GOLD.120'].find({}).sort({
+       date_time: -1
+});
+
+db['market.data.fx.GOLD.120'].find({}).sort({
+       date_time: -1
+});
+
+
+db['market.data.fx.GOLD.1440'].find({
+
+})
+
+/*
+db['market.data.fx.GOLD.1440'].find({
+    date_time: ObjectId("601c54adccdd5ad361ba1d7c")
+})
+*/
+
+
+db['market.data.fx.GOLD.120'].find( { time : { $exists : true } } ).sort(
+{
+        date_time: -1
+    }
+);
+
+db['market.data.fx.GOLD.60'].updateMany({}, {$rename: {'time': 'date_time'}})
+
+
+
+// db['market.data.fx.GOLD.1440'].updateMany({}, {$rename: {'time': 'date_time'}})
+
+
+
+// 601c54adccdd5ad361ba1d7c
+
+
+
+// db['market.data.fx.GOLD.10'].deleteMany({})
+
+db['market.data.fx.GOLD.7680'].count()
+

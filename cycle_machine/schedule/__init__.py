@@ -12,10 +12,13 @@ def sync_new_bars(delta_solution_config: DeltaSolutionConfig, period: int):
     last_bar = repository.get_last_bar(period)
     bars = feed.get_bars_for(period, last_bar.date_time, datetime.now())
 
-    if len(bars) > 0:
-        bars.pop(0)
+    for i in range(0, len(bars)):
+        if last_bar.date_time == bars[i].date_time:
+            bars.pop(i)
+            break
 
     new_bars = []
+
     for b in bars:
         new_bars.append(repository.save_bar(period, b))
 
@@ -42,7 +45,8 @@ if __name__ == '__main__':
     delta_solution_config = DeltaSolutionConfig(symbol)
 
     for p in delta_solution_config.periods_asc():
-        # p = 120
+        p = 1920
+        # p = 60
         created_bars = sync_new_bars(delta_solution_config, p)
         log_and_summarize_created_bars(symbol, p, created_bars)
 
